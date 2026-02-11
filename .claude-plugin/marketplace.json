@@ -1,0 +1,18 @@
+{
+  "name": "claude-tool",
+  "owner": {
+    "name": "hao031410"
+  },
+  "plugins": [
+    {
+      "name": "sql-generator",
+      "source": "./skills/sql-generator",
+      "description": "根据业务描述生成可执行 SQL，先验证真实表名/字段名/枚举值，再输出查询方案与 SQL。适用于缺失记录排查、两表差异对比、多表关联查询与分组聚合统计。"
+    },
+    {
+      "name": "terp-model-generator",
+      "source": "./skills/terp-model-generator",
+      "description": "将字段定义或 JSON 转换为 terp 项目 DDD 模型层代码（PO/DTO/Repository/Converter），生成前自动探测 SPI 包结构、业务模块与目标包路径。"
+    }
+  ]
+}
