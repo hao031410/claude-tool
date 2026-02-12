@@ -1,0 +1,22 @@
+{
+  "tableName": "grade_rule",
+  "moduleName": "grade",
+  "projectName": "terp-partner",
+  "fields": [
+    {
+      "name": "grade_name",
+      "type": "String",
+      "comment": "等级名称"
+    },
+    {
+      "name": "grade_score",
+      "type": "Integer",
+      "comment": "等级分数"
+    },
+    {
+      "name": "grade_discount",
+      "type": "BigDecimal",
+      "comment": "等级折扣"
+    }
+  ]
+}
