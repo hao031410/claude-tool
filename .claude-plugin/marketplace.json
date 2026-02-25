@@ -23,6 +23,11 @@
       "name": "dlna",
       "source": "./skills/dlna",
       "description": "DLNA 设备控制工具，用于控制电视/音响播放媒体"
+    },
+    {
+      "name": "terminus-emp-skill",
+      "source": "./skills/terminus-emp-skill",
+      "description": "EMP 工时自动填报技能：登录、查询项目/细项、按配置比例填报当天工时，并生成每日/每周统计结果。"
     }
   ]
 }
