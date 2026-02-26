@@ -18,3 +18,10 @@
 node_modules/
 package-lock.json
 pnpm-lock.yaml
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Skill temp data
+skills/terminus-emp-skill/temp/
