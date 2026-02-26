@@ -19,7 +19,6 @@
 2. `stats_result.day`：当天填报结果。
 3. `stats_result.week`：周聚合结果。
 4. `stats_result.month`：月聚合结果。
-
 ## 2. 执行顺序（强制）
 1. 加载本地缓存。
 2. 必要参数校验（阻断式）。
