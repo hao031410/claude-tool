@@ -37,15 +37,27 @@ DEFAULT_IAM_REFERER = (
     "https://emp-portal-iam.app.duandian.com/EMP_MANAGER_PORTAL-EMP-tpf_hkboivmz/login"
 )
 ASIA_SHANGHAI = ZoneInfo("Asia/Shanghai")
+MAX_DATE_DRIFT_DAYS = 7
 
 
-def default_state_file() -> pathlib.Path:
-    """默认 state 文件：$LOCAL_DB_DIR/terminus-emp-skill/state.json，未设置则 ~/data。"""
+def default_cache_dir() -> pathlib.Path:
+    """默认缓存目录：$LOCAL_DB_DIR/terminus-emp-skill，未设置则 ~/data。"""
     base_dir = pathlib.Path(os.getenv("LOCAL_DB_DIR", "~/data")).expanduser()
-    return base_dir / "terminus-emp-skill/state.json"
+    return base_dir / "terminus-emp-skill"
 
 
-DEFAULT_STATE_FILE = default_state_file()
+def default_config_state_file() -> pathlib.Path:
+    """默认配置缓存文件（auth + project_config）。"""
+    return default_cache_dir() / "config.json"
+
+
+def default_records_state_file() -> pathlib.Path:
+    """默认填报记录缓存文件（stats_cache）。"""
+    return default_cache_dir() / "records.json"
+
+
+DEFAULT_CONFIG_STATE_FILE = default_config_state_file()
+DEFAULT_RECORDS_STATE_FILE = default_records_state_file()
 
 
 class EmpClient:
@@ -281,35 +293,65 @@ def to_week_range_ms(target_date: str) -> tuple[int, int]:
     return int(start.timestamp() * 1000), int(end.timestamp() * 1000)
 
 
-def load_state(state_file: pathlib.Path) -> dict[str, Any]:
-    """读取状态文件，不存在则返回空结构。"""
-    if not state_file.exists():
-        return {"auth": {}, "project_config": [], "stats_cache": {"daily": {}, "weekly": {}, "monthly": {}}}
-    with state_file.open("r", encoding="utf-8") as f:
+def load_json_file(file_path: pathlib.Path) -> dict[str, Any]:
+    """读取 JSON 文件，不存在或结构非法时返回空对象。"""
+    if not file_path.exists():
+        return {}
+    with file_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, dict):
-        return {"auth": {}, "project_config": [], "stats_cache": {"daily": {}, "weekly": {}, "monthly": {}}}
+        return {}
+    return data
+
+
+def load_config_state(config_file: pathlib.Path) -> dict[str, Any]:
+    """读取配置缓存（auth + project_config），兼容旧字段。"""
+    data = load_json_file(config_file)
     data.setdefault("auth", {})
     # 兼容旧版 state：cookie 在顶层字段。
     legacy_cookie = str(data.get("cookie", "")).strip()
     if legacy_cookie and not str(data["auth"].get("emp_cookie", "")).strip():
         data["auth"]["emp_cookie"] = legacy_cookie
     data.setdefault("project_config", [])
-    data.setdefault("stats_cache", {"daily": {}, "weekly": {}, "monthly": {}})
-    data["stats_cache"].setdefault("daily", {})
-    data["stats_cache"].setdefault("weekly", {})
-    data["stats_cache"].setdefault("monthly", {})
     return data
 
 
-def save_state(state_file: pathlib.Path, data: dict[str, Any]) -> None:
-    """原子写入状态文件并收紧权限。"""
-    state_file.parent.mkdir(parents=True, exist_ok=True)
-    tmp_file = state_file.with_suffix(".json.tmp")
+def load_stats_cache(records_file: pathlib.Path) -> dict[str, Any]:
+    """读取填报记录缓存（stats_cache）。"""
+    data = load_json_file(records_file)
+    data.setdefault("daily", {})
+    data.setdefault("weekly", {})
+    data.setdefault("monthly", {})
+    return data
+
+
+def save_json_file(file_path: pathlib.Path, data: dict[str, Any]) -> None:
+    """原子写入 JSON 文件并收紧权限。"""
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_file = file_path.with_suffix(".json.tmp")
     with tmp_file.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.chmod(tmp_file, 0o600)
-    tmp_file.replace(state_file)
+    tmp_file.replace(file_path)
+
+
+def save_config_state(config_file: pathlib.Path, state: dict[str, Any]) -> None:
+    """仅持久化配置缓存字段，避免与记录缓存混写。"""
+    payload = {
+        "auth": state.get("auth") or {},
+        "project_config": state.get("project_config") or [],
+    }
+    save_json_file(config_file, payload)
+
+
+def save_stats_cache(records_file: pathlib.Path, stats_cache: dict[str, Any]) -> None:
+    """仅持久化填报记录缓存字段。"""
+    payload = {
+        "daily": (stats_cache or {}).get("daily") or {},
+        "weekly": (stats_cache or {}).get("weekly") or {},
+        "monthly": (stats_cache or {}).get("monthly") or {},
+    }
+    save_json_file(records_file, payload)
 
 
 def data_list(raw: dict[str, Any]) -> list[dict[str, Any]]:
@@ -374,6 +416,33 @@ def default_target_date() -> str:
     return dt.datetime.now(ASIA_SHANGHAI).date().isoformat()
 
 
+def resolve_target_date(date_arg: str | None, force_date: bool) -> str:
+    """
+    解析并校验目标日期：
+    1) 未传时使用 Asia/Shanghai 当天；
+    2) 默认拒绝未来日期；
+    3) 默认拒绝与今天相差超过 MAX_DATE_DRIFT_DAYS 的日期（防止旧参数误注入）；
+    4) 通过 --force-date 可放开 2/3。
+    """
+    today = dt.datetime.now(ASIA_SHANGHAI).date()
+    target_raw = (date_arg or "").strip()
+    target = today if not target_raw else dt.datetime.strptime(target_raw, "%Y-%m-%d").date()
+
+    drift_days = (target - today).days
+    if not force_date:
+        if drift_days > 0:
+            raise ValueError(
+                f"目标日期 {target.isoformat()} 晚于当前上海日期 {today.isoformat()}，"
+                "默认禁止未来日期；如需强制执行请加 --force-date。"
+            )
+        if abs(drift_days) > MAX_DATE_DRIFT_DAYS:
+            raise ValueError(
+                f"目标日期 {target.isoformat()} 与当前上海日期 {today.isoformat()} 相差 {abs(drift_days)} 天，"
+                f"超过保护阈值 {MAX_DATE_DRIFT_DAYS} 天；如需强制执行请加 --force-date。"
+            )
+    return target.isoformat()
+
+
 def is_auth_failure(exc: Exception) -> bool:
     """判断异常是否为鉴权失败（cookie 失效）。"""
     if isinstance(exc, urllib.error.HTTPError):
@@ -400,7 +469,7 @@ def ensure_valid_cookie(
     client: EmpClient,
     args: argparse.Namespace,
     state: dict[str, Any],
-    state_file: pathlib.Path,
+    config_file: pathlib.Path,
 ) -> None:
     """
     启动前保证 cookie 可用：
@@ -445,7 +514,7 @@ def ensure_valid_cookie(
         state["auth"]["passwordEncrypted"] = bool(password_encrypted)
     if iam_cookie:
         state["auth"]["iam_cookie"] = iam_cookie
-    save_state(state_file, state)
+    save_config_state(config_file, state)
 
 
 def fetch_project_catalog(
@@ -530,7 +599,14 @@ def run_list_projects(client: EmpClient, target_date: str, as_json: bool) -> int
     return 0
 
 
-def run_fill_day(client: EmpClient, state: dict[str, Any], state_file: pathlib.Path, target_date: str, args: argparse.Namespace) -> int:
+def run_fill_day(
+    client: EmpClient,
+    state: dict[str, Any],
+    config_file: pathlib.Path,
+    records_file: pathlib.Path,
+    target_date: str,
+    args: argparse.Namespace,
+) -> int:
     begin_ms, end_ms = to_day_range_ms(target_date)
     week_begin_ms, week_end_ms = to_week_range_ms(target_date)
     fill_date = f"{target_date} 00:00:00"
@@ -634,7 +710,8 @@ def run_fill_day(client: EmpClient, state: dict[str, Any], state_file: pathlib.P
         "lastSuccessAt": now_iso(),
         "sourceRequestId": request_ids[-1] if request_ids else "",
     }
-    save_state(state_file, state)
+    save_config_state(config_file, state)
+    save_stats_cache(records_file, state["stats_cache"])
 
     result = {
         "date": target_date,
@@ -643,7 +720,8 @@ def run_fill_day(client: EmpClient, state: dict[str, Any], state_file: pathlib.P
         "requestIds": request_ids,
         "verify": verify_result if args.verify else "skipped",
         "timings": timings,
-        "stateFile": str(state_file),
+        "configStateFile": str(config_file),
+        "recordsStateFile": str(records_file),
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
@@ -716,24 +794,29 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--password", default=os.getenv("EMP_PASSWORD", ""))
     parser.add_argument("--password-encrypted", action="store_true", help="--password 已是加密值时开启")
     parser.add_argument("--captcha", default="", help="登录验证码（仅当 prepare 要求时使用）")
-    parser.add_argument("--state-file", default=str(DEFAULT_STATE_FILE))
+    parser.add_argument("--state-file", default="", help="兼容旧参数：等价于 --config-state-file")
+    parser.add_argument("--config-state-file", default=str(DEFAULT_CONFIG_STATE_FILE), help="配置缓存文件（auth + project_config）")
+    parser.add_argument("--records-state-file", default=str(DEFAULT_RECORDS_STATE_FILE), help="填报记录缓存文件（stats_cache）")
     parser.add_argument("--timeout", type=int, default=15)
     parser.add_argument("--retries", type=int, default=1)
 
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_list = sub.add_parser("list-projects", help="获取项目+子项目清单")
-    p_list.add_argument("--date", default=default_target_date(), help="日期：YYYY-MM-DD（默认 Asia/Shanghai 当天）")
+    p_list.add_argument("--date", default=None, help="日期：YYYY-MM-DD（默认 Asia/Shanghai 当天）")
+    p_list.add_argument("--force-date", action="store_true", help="允许使用未来/远历史日期")
     p_list.add_argument("--json", action="store_true", help="JSON 输出")
 
     p_fill = sub.add_parser("fill-day", help="按配置填报某天工时")
-    p_fill.add_argument("--date", default=default_target_date(), help="日期：YYYY-MM-DD（默认 Asia/Shanghai 当天）")
+    p_fill.add_argument("--date", default=None, help="日期：YYYY-MM-DD（默认 Asia/Shanghai 当天）")
+    p_fill.add_argument("--force-date", action="store_true", help="允许使用未来/远历史日期")
     p_fill.add_argument("--config-file", help="project_config JSON 文件路径")
     p_fill.add_argument("--config-json", help="project_config JSON 字符串")
     p_fill.add_argument("--verify", action="store_true", help="写后回查")
 
-    p_verify = sub.add_parser("verify-day", help="按 state 中 project_config 回查某天工时")
-    p_verify.add_argument("--date", default=default_target_date(), help="日期：YYYY-MM-DD（默认 Asia/Shanghai 当天）")
+    p_verify = sub.add_parser("verify-day", help="按配置缓存中的 project_config 回查某天工时")
+    p_verify.add_argument("--date", default=None, help="日期：YYYY-MM-DD（默认 Asia/Shanghai 当天）")
+    p_verify.add_argument("--force-date", action="store_true", help="允许使用未来/远历史日期")
 
     return parser
 
@@ -741,9 +824,32 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
+    try:
+        args.date = resolve_target_date(args.date, getattr(args, "force_date", False))
+    except ValueError as exc:
+        parser.error(f"日期参数非法：{exc}")
+    print(
+        f"[date-guard] command={args.command} target_date={args.date} "
+        f"force_date={bool(getattr(args, 'force_date', False))}",
+        file=sys.stderr,
+    )
 
-    state_file = pathlib.Path(args.state_file).expanduser().resolve()
-    state = load_state(state_file)
+    config_file_arg = args.state_file or args.config_state_file
+    config_file = pathlib.Path(config_file_arg).expanduser().resolve()
+    records_file = pathlib.Path(args.records_state_file).expanduser().resolve()
+
+    state = load_config_state(config_file)
+    stats_cache = load_stats_cache(records_file)
+    # 兼容旧单文件：若 records 为空而 config 中有 stats_cache，则迁移到 records。
+    legacy_stats = state.get("stats_cache")
+    if isinstance(legacy_stats, dict) and not any(stats_cache.get(k) for k in ("daily", "weekly", "monthly")):
+        stats_cache = {
+            "daily": legacy_stats.get("daily") or {},
+            "weekly": legacy_stats.get("weekly") or {},
+            "monthly": legacy_stats.get("monthly") or {},
+        }
+        save_stats_cache(records_file, stats_cache)
+    state["stats_cache"] = stats_cache
     emp_cookie, _, _, _, _, _ = resolve_auth_inputs(args, state)
     if not emp_cookie and not (args.account or args.password or (state.get("auth") or {}).get("account")):
         parser.error("缺少认证信息：请提供 cookie，或提供 account/password 以自动登录。")
@@ -758,14 +864,14 @@ def main() -> int:
         retries=args.retries,
     )
     try:
-        ensure_valid_cookie(client, args, state, state_file)
+        ensure_valid_cookie(client, args, state, config_file)
     except Exception as exc:
         parser.error(f"启动鉴权失败：{exc}")
 
     if args.command == "list-projects":
         return run_list_projects(client, args.date, as_json=args.json)
     if args.command == "fill-day":
-        return run_fill_day(client, state, state_file, args.date, args)
+        return run_fill_day(client, state, config_file, records_file, args.date, args)
     if args.command == "verify-day":
         return run_verify_day(client, state, args.date)
     parser.error("unknown command")
