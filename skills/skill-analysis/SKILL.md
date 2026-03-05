@@ -1,6 +1,6 @@
 ---
 name: skill-analysis
-description: 评估所有 skill 并推荐合适的
+description: 分析用户任务，评估所有可用技能（系统技能 + 本地技能 + 用户技能），推荐并执行最合适的选择。
 argument-hint: [你的任务描述]
 allowed-tools: ["Bash", "AskUserQuestion", "Skill"]
 ---

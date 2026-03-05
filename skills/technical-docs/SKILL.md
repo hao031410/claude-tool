@@ -1,5 +1,5 @@
 ---
-name: Technical Documentation Engine
+name: technical-docs
 description: Complete technical documentation system — from planning through maintenance. Covers READMEs, API docs, guides, architecture docs, runbooks, and developer portals. Includes templates, quality scoring, and automation.
 metadata:
   category: writing
@@ -966,7 +966,7 @@ For each error code or common error:
    ```bash
    # How to check
    [diagnostic command]
-   ```
+```
 
 2. **[Cause 2]:** [explanation]
    ```bash
