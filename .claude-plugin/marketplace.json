@@ -43,6 +43,11 @@
       "name": "technical-docs",
       "source": "./skills/technical-docs",
       "description": "完整的技术文档系统，支持 README、API 文档、架构文档、Runbook 等多种文档类型，提供模板、质量评分和自动化能力。"
+    },
+    {
+      "name": "terp-developer",
+      "source": "./skills/terp-developer",
+      "description": "Trantor2 框架智能开发助手：模型双向转换（PO ↔ JSON）、全链路影响分析、语义冲突检测、架构咨询、代码规范修复，带知识库记忆功能。"
     }
   ]
 }
