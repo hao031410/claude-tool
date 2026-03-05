@@ -1,29 +1,30 @@
 ---
 name: git-commit
-description: Use when creating git commits, writing commit messages, or when modifications need to be committed with conventional commit format and emoji support
-argument-hint: [-p|--push] [-s|--single] [-d|--dry-run]
+description: 创建 git 提交，遵循 Conventional Commits 规范，支持 emoji、自动拆分、预览模式和自动推送
+argument-hint: [-p|--push] [-s|--single] [-d|--dry-run] [-e|--english]
 allowed-tools: ["Bash", "AskUserQuestion"]
 ---
 
 # Git Commit
 
-Intelligent commit creation following Conventional Commits specification with emoji support, automatic splitting, dry-run mode, and auto-push.
+智能提交创建，遵循 Conventional Commits 规范，支持 emoji、自动拆分、预览模式和自动推送。
 
 ## When to Use
 
-- Creating commits from modified or staged files
-- Need commit messages to follow conventional format
-- Want automatic emoji mapping based on change type
-- Need to split large changes into logical commits
-- Want to preview commit plan before executing
+- 从修改或已暂存的文件创建提交
+- 需要提交消息遵循 Conventional Commits 格式
+- 希望根据变更类型自动匹配 emoji
+- 需要将大型变更拆分为逻辑提交
+- 想要在执行前预览提交计划
 
 ## Parameters
 
 | Parameter | Alias | Function |
 |-----------|-------|----------|
-| `-p` | `--push` | Auto execute `git push` after commit |
-| `-s` | `--single` | Force single commit, no automatic splitting |
-| `-d` | `--dry-run` | Show commit plan only, don't execute |
+| `-p` | `--push` | 提交后自动执行 `git push` |
+| `-s` | `--single` | 强制单个提交，不自动拆分 |
+| `-d` | `--dry-run` | 仅显示提交计划，不执行 |
+| `-e` | `--english` | 使用英文提交消息 (默认：中文) |
 
 ## Confirmation Policy
 
@@ -33,48 +34,50 @@ Confirmation required only for special cases:
 
 | Case | Trigger Condition |
 |------|-------------------|
-| 🚨 **Breaking Change** | API incompatible change detected |
-| 🗑️ **Mass Delete** | Deleting ≥ 3 files |
-| 📦 **Too Many Changes** | Single commit ≥ 20 files |
+| 🚨 **Breaking Change** | API 不兼容变更 |
+| 🗑️ **Mass Delete** | 删除 ≥ 3 个文件 |
+| 📦 **Too Many Changes** | 单个提交 ≥ 20 个文件 |
 | 🔐 **Sensitive Files** | `.env*`, `*secret*`, `*key*`, `*credential*` |
-| 📄 **Ignore Rules** | Modifying `.gitignore` |
+| 📄 **Ignore Rules** | 修改 `.gitignore` |
 | 📚 **Dependency Changes** | `package.json`, `pom.xml`, `go.mod`, `Cargo.toml` |
-| 🐞 **Debug Code** | Detected `console.log`, `print()`, `fmt.Println` |
-| ⚠️ **Partial Staging** | Only partial changes staged via `git add -p` |
+| 🐞 **Debug Code** | 检测到 `console.log`, `print()`, `fmt.Println` |
+| ⚠️ **Partial Staging** | 仅部分变更通过 `git add -p` 暂存 |
 
 ## Workflow
 
 ```
-1. Execute git status to get modified files
-2. Analyze and group files by logic (--single merges all)
-3. Generate commit message for each group (with emoji)
-4. -d mode? Show plan and exit
-5. Check if any special case triggers confirmation
-6. No special case? Execute git add <files> && git commit directly
-7. -p mode? Execute git push
-8. Output commit results
+1. 执行 git status 获取修改文件
+2. 按逻辑分析和分组文件 (--single 合并所有)
+3. 为每个分组生成提交消息 (带 emoji)
+4. -d 模式？显示计划并退出
+5. 检查是否有特殊情况需要确认
+6. 无特殊情况？执行 git add <files> && git commit
+7. -p 模式？执行 git push
+8. 输出提交结果
 ```
+
+**语言：** 默认中文，`-e` 参数使用英文
 
 ## Commit Types and Emoji Mapping
 
-| Type | Emoji | Description | File Match Example |
-|------|-------|-------------|-------------------|
-| `feat` | ✨ | New feature | New src/**/*.{ts,js,py,go} |
-| `fix` | 🐛 | Bug fix | Modified src/**/*.{ts,js,py,go} |
-| `docs` | 📝 | Documentation | *.md, docs/**/* |
-| `refactor` | ♻️ | Refactoring | Code changes without behavior change |
-| `test` | ✅ | Testing | *.test.*, __tests__/**, spec/** |
-| `perf` | 🚀 | Performance | Changes with performance keywords |
-| `chore` | 🔧 | Build/tooling | package.json, pom.xml, build.gradle |
-| `style` | 🎨 | Code style | Formatting, indentation |
-| `remove` | 🔥 | Removal | Deleted files/code |
-| `build` | 📦 | Dependency management | package-lock.json, go.sum, Cargo.toml |
-| `ci` | 👷 | CI/CD | .github/**, .gitlab-ci.yml, Jenkinsfile |
-| `config` | ⚙️ | Configuration | .env*, *.config.*, *.yaml, *.yml |
+| Type | Emoji | Description (中文) | Description (English) | File Match Example |
+|------|-------|-------------------|----------------------|-------------------|
+| `feat` | ✨ | 新功能 | New feature | New src/**/*.{ts,js,py,go} |
+| `fix` | 🐛 | Bug 修复 | Bug fix | Modified src/**/*.{ts,js,py,go} |
+| `docs` | 📝 | 文档 | Documentation | *.md, docs/**/* |
+| `refactor` | ♻️ | 重构 | Refactoring | Code changes without behavior change |
+| `test` | ✅ | 测试 | Testing | *.test.*, __tests__/**, spec/** |
+| `perf` | 🚀 | 性能优化 | Performance | Changes with performance keywords |
+| `chore` | 🔧 | 构建/工具 | Build/tooling | package.json, pom.xml, build.gradle |
+| `style` | 🎨 | 代码风格 | Code style | Formatting, indentation |
+| `remove` | 🔥 | 删除 | Removal | Deleted files/code |
+| `build` | 📦 | 依赖管理 | Dependency management | package-lock.json, go.sum, Cargo.toml |
+| `ci` | 👷 | CI/CD | CI/CD | .github/**, .gitlab-ci.yml, Jenkinsfile |
+| `config` | ⚙️ | 配置 | Configuration | .env*, *.config.*, *.yaml, *.yml |
 
 ## Splitting Rules
 
-### Group by File Path
+### 按文件路径分组
 ```
 src/auth/**    → feat(auth) / fix(auth)
 src/user/**    → feat(user) / fix(user)
@@ -82,18 +85,18 @@ docs/**        → docs
 *.test.*       → test
 ```
 
-### Group by Change Type
+### 按变更类型分组
 ```
-New files      → feat(scope): add ...
-Modified files → fix(scope): update ...
-Deleted files  → remove(scope): remove ...
+新文件         → feat(scope): 添加 ...
+修改文件       → fix(scope): 更新 ...
+删除文件       → remove(scope): 删除 ...
 ```
 
-### Dependency Check (Rule 8)
-Do NOT split when:
-- Interface implementation + interface definition for same feature
-- Test file and its corresponding source file
-- Strongly coupled call chain changes
+### 依赖检查 (Rule 8)
+以下情况不拆分：
+- 同一功能的接口定义 + 接口实现
+- 测试文件 + 对应的源文件
+- 强耦合调用链变更
 
 ## Commit Message Format
 
@@ -103,7 +106,28 @@ Do NOT split when:
 [optional body - detailed explanation]
 ```
 
-### Examples
+### Language Policy
+
+- **Default**: Chinese (中文)
+- **With `-e` / `--english`**: English
+
+### Examples (Chinese - Default)
+```
+✨ feat(auth): 添加 oauth2 支持
+🐛 fix(user): 修复 getUserById 空指针问题
+📝 docs: 更新 readme 安装指南
+✅ test(auth): 添加登录流程单元测试
+♻️ refactor(core): 提取验证逻辑
+🚀 perf(db): 优化查询性能
+🔧 chore: 更新依赖
+🎨 style: 使用 prettier 格式化代码
+🔥 remove(api): 弃用 v1 端点
+📦 build: 升级 lodash 至 4.17.21
+👷 ci: 添加 github actions 工作流
+⚙️ config: 添加 redis 配置
+```
+
+### Examples (English - with -e flag)
 ```
 ✨ feat(auth): add oauth2 support
 🐛 fix(user): resolve null pointer in getUserById
@@ -121,6 +145,15 @@ Do NOT split when:
 
 ## Description Guidelines
 
+### Chinese (Default)
+- ✅ 使用祈使句/动词开头 ("添加" 而非 "已添加" 或 "正在添加")
+- ✅ 首字母无需大写 (中文不适用)
+- ✅ 句末不加句号
+- ✅ 简洁明了，建议 20-50 字
+- ❌ `新增了功能` → ✅ `feat: 添加用户管理功能`
+- ❌ `fix: bug` → ✅ `fix: 修复用户服务空指针问题`
+
+### English (with -e flag)
 - ✅ Use imperative mood ("add" not "added" or "adds")
 - ✅ Lowercase first letter
 - ✅ No period at the end
@@ -131,9 +164,9 @@ Do NOT split when:
 ## Breaking Change Format
 
 ```
-✨ feat(api)!: migrate to new response format
+✨ feat(api)!: 迁移到新响应格式
 
-BREAKING CHANGE: response format changed from XML to JSON
+BREAKING CHANGE: 响应格式从 XML 改为 JSON
 ```
 
 ## Examples
@@ -143,20 +176,20 @@ BREAKING CHANGE: response format changed from XML to JSON
 skill git-commit -d
 ```
 
-Output:
+Output (Chinese - Default):
 ```
-📋 Commit Plan:
+📋 提交计划：
 
-[1/3] ✨ feat(auth): add login validation
-    Files: src/auth/login.ts, src/auth/validator.ts
+[1/3] ✨ feat(auth): 添加登录验证
+    文件：src/auth/login.ts, src/auth/validator.ts
 
-[2/3] ✅ test(auth): add unit tests
-    Files: src/auth/login.test.ts
+[2/3] ✅ test(auth): 添加单元测试
+    文件：src/auth/login.test.ts
 
-[3/3] 📝 docs: update readme
-    Files: README.md
+[3/3] 📝 docs: 更新 readme
+    文件：README.md
 
-Total: 3 commits, 12 files
+总计：3 commits, 12 files
 ```
 
 ### Default Mode (Direct Execution)
@@ -164,7 +197,33 @@ Total: 3 commits, 12 files
 skill git-commit
 ```
 
-Output:
+Output (Chinese - Default):
+```
+📋 提交计划：
+
+[1/3] ✨ feat(auth): 添加登录验证
+    文件：src/auth/login.ts, src/auth/validator.ts
+
+[2/3] ✅ test(auth): 添加单元测试
+    文件：src/auth/login.test.ts
+
+[3/3] 📝 docs: 更新 readme
+    文件：README.md
+
+总计：3 commits, 12 files
+
+✍️ 提交中...
+✅ [1/3] b4dcaf1 ✨ feat(auth): 添加登录验证
+✅ [2/3] 2a1e8f9 ✅ test(auth): 添加单元测试
+✅ [3/3] 7c3d2b4 📝 docs: 更新 readme
+```
+
+### English Mode (with -e flag)
+```bash
+skill git-commit -e
+```
+
+Output (English):
 ```
 📋 Commit Plan:
 
@@ -190,18 +249,18 @@ Total: 3 commits, 12 files
 skill git-commit
 ```
 
-Output:
+Output (Chinese - Default):
 ```
-⚠️ Detected cases requiring confirmation:
+⚠️ 检测到需要确认的情况：
 
-🔐 Sensitive files:
+🔐 敏感文件：
   - .env.local
   - src/config/api_key.ts
 
-📚 Dependency changes:
-  - package.json (+3 deps, -1 dep)
+📚 依赖变更：
+  - package.json (+3 个依赖，-1 个依赖)
 
-Confirm commit? (y/n)
+确认提交？(y/n)
 ```
 
 ### Auto Push
@@ -209,48 +268,48 @@ Confirm commit? (y/n)
 skill git-commit -p
 ```
 
-Auto executes `git push` after commit.
+提交后自动执行 `git push`。
 
 ### Force Single Commit
 ```bash
 skill git-commit -s
 ```
 
-All changes merged into one commit:
+所有变更合并为一个提交：
 ```
-✨ feat: multiple updates across auth, user, docs
+✨ feat: 多个更新涉及 auth, user, docs
 ```
 
 ### Complete Workflow
 ```bash
-skill git-commit -d   # Preview plan first
-skill git-commit -p   # Execute and push when ready
+skill git-commit -d   # 预览提交计划
+skill git-commit -p   # 执行并提交
 ```
 
 ## Edge Cases
 
 ### No Changes
 ```
-✅ Working directory clean, nothing to commit
+✅ 工作目录干净，无需提交
 ```
 
 ### Untracked Files Present
 ```
-⚠️ Found untracked files:
+⚠️ 发现未跟踪文件：
   - new-feature.ts
 
-Only tracking modified/staged files.
-Run git add to include new files.
+仅跟踪已修改/已暂存文件。
+运行 git add 以包含新文件。
 ```
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| ❌ `feat: Added new feature` (past tense) | ✅ `feat: add new feature` |
-| ❌ `fix: bug` (too vague) | ✅ `fix: resolve null pointer in user service` |
-| ❌ `feat: add feature` (redundant) | ✅ `feat: add user profile page` |
-| ❌ `feat: add feature.` (period at end) | ✅ `feat: add feature` |
-| ❌ `FEAT: add feature` (uppercase) | ✅ `feat: add feature` |
-| ❌ Committing `.env` with secrets | ✅ Add to .gitignore, never commit secrets |
-| ❌ One huge commit with 50 files | ✅ Use auto-split or `-d` to plan multiple commits |
+| ❌ `feat: 新增了功能` (过去式) | ✅ `feat: 添加新功能` |
+| ❌ `fix: bug` (太模糊) | ✅ `fix: 修复用户服务空指针问题` |
+| ❌ `feat: 添加功能` (冗余) | ✅ `feat: 添加用户个人资料页面` |
+| ❌ `feat: 添加功能。` (句号) | ✅ `feat: 添加功能` |
+| ❌ `FEAT: 添加功能` (大写) | ✅ `feat: 添加功能` |
+| ❌ 提交包含密钥的 `.env` 文件 | ✅ 添加到 .gitignore，永不提交密钥 |
+| ❌ 一个巨大提交包含 50 个文件 | ✅ 使用自动拆分或 `-d` 计划多个提交 |
