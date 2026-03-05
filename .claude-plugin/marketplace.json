@@ -28,6 +28,21 @@
       "name": "terminus-emp-skill",
       "source": "./skills/terminus-emp-skill",
       "description": "EMP 工时自动填报技能：登录、查询项目/细项、按配置比例填报当天工时，并生成每日/每周统计结果。"
+    },
+    {
+      "name": "git-commit",
+      "source": "./skills/git-commit",
+      "description": "智能创建符合 Conventional Commits 规范的提交，支持 emoji、自动拆分、预演模式和自动 push。"
+    },
+    {
+      "name": "skill-analysis",
+      "source": "./skills/skill-analysis",
+      "description": "分析用户任务，评估所有可用技能（系统技能 + 本地技能 + 用户技能），推荐并执行最合适的选择。"
+    },
+    {
+      "name": "technical-docs",
+      "source": "./skills/technical-docs",
+      "description": "完整的技术文档系统，支持 README、API 文档、架构文档、Runbook 等多种文档类型，提供模板、质量评分和自动化能力。"
     }
   ]
 }
