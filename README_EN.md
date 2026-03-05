@@ -4,68 +4,68 @@
 [![Plugin](https://img.shields.io/badge/plugin-marketplace-green.svg)](https://github.com/hao031410/claude-tool)
 [![Skills](https://img.shields.io/badge/skills-9-blue.svg)](skills/)
 
-**面向特定场景的 Claude Code 技能模块库，提供开箱即用的开发工具链。**
+**Scenario-specific skill modules for Claude Code, providing out-of-the-box development toolchains.**
 
-[English](README_EN.md) | 简体中文
+English | [简体中文](README.md)
 
 ---
 
 ## Quick Start
 
-### 安装
+### Installation
 
 ```bash
 # Claude Code
 /plugin marketplace add hao031410/claude-tool
 
 # cc-switch
-# 在 skill marketplace 中添加仓库：hao031410/claude-tool
+# Add repository in skill marketplace: hao031410/claude-tool
 ```
 
-验证安装：
+Verify installation:
 ```bash
 skill-check
 ```
 
-预期输出：
+Expected output:
 ```
-✅ 发现 9 个技能：
-  - git-commit        智能 Git 提交助手
-  - sql-generator     SQL 查询生成器
-  - terp-model-generator  模型代码生成
+✅ Found 9 skills:
+  - git-commit        Intelligent Git commit assistant
+  - sql-generator     SQL query generator
+  - terp-model-generator  Model code generation
   - ...
 ```
 
-### 第一次使用
+### First Time Use
 
 ```bash
-# 查看推荐技能
-skill-check "我要生成 SQL 查询"
+# Get skill recommendations
+skill-check "I want to generate SQL queries"
 
-# 使用特定技能
-skill sql-generator 查找所有没有订单的用户
+# Use specific skill
+skill sql-generator find all users without orders
 ```
 
 ---
 
 ## What It Does
 
-**解决开发过程中的重复性工作：**
+**Solves repetitive development work:**
 
-- ✨ **智能提交** - 自动生成符合规范的 commit message，支持自动拆分、预览模式
-- 🗄️ **SQL 生成** - 根据业务描述生成可执行 SQL，自动验证表名/字段名
-- 🏗️ **代码生成** - 从字段定义生成完整的 DDD 模型层代码
-- 📊 **工时填报** - 自动化 EMP 工时填报和统计
-- 📝 **技术文档** - 从代码生成高质量技术文档
-- 🎬 **教学视频** - 数学题讲解动画视频自动生成
-- 📺 **媒体控制** - DLNA 设备发现和媒体播放控制
+- ✨ **Intelligent Commits** - Auto-generate compliant commit messages with auto-split, preview mode
+- 🗄️ **SQL Generation** - Generate executable SQL from business descriptions with automatic table/field validation
+- 🏗️ **Code Generation** - Generate complete DDD model layer code from field definitions
+- 📊 **Timesheet Automation** - Automate EMP timesheet filling and statistics
+- 📝 **Technical Documentation** - Generate high-quality technical docs from code
+- 🎬 **Tutorial Videos** - Auto-generate math tutorial animation videos
+- 📺 **Media Control** - DLNA device discovery and media playback control
 
-**适用于：**
-- 需要频繁编写 SQL 查询的后端开发者
-- 使用 Trantor2 框架的团队
-- 重视代码规范和提交历史的团队
-- 需要自动化技术文档的项目
-- 制作技术教学内容的创作者
+**Perfect for:**
+- Backend developers who frequently write SQL queries
+- Teams using Trantor2 framework
+- Teams emphasizing code standards and commit history
+- Projects requiring automated technical documentation
+- Creators producing technical educational content
 
 ---
 
@@ -162,16 +162,16 @@ skill sql-generator 查找所有没有订单的用户
 /terp-developer -init
 
 # Create model from JSON
-/terp-developer 创建 SettAccountPO
+/terp-developer create SettAccountPO
 
 # Export model to JSON
-/terp-developer 将 SettDocTrPO 导出为 JSON
+/terp-developer export SettDocTrPO to JSON
 
 # Architecture consultation
-/terp-developer 结算单创建逻辑应该放在哪层？
+/terp-developer Which layer should settlement creation logic be in?
 
 # Code fix
-/terp-developer 修复 SettItemTrService 的集合判空问题
+/terp-developer fix collection null checks in SettItemTrService
 ```
 
 📖 [Full Documentation](skills/terp-developer/SKILL.md)
@@ -265,9 +265,14 @@ skill git-commit
 # Commit and push
 skill git-commit -p
 
-# English commit messages
+# English commit messages (default)
 skill git-commit -e
 ```
+
+**Language Support:**
+- Default: English
+- With `-e` flag: English (explicit)
+- Without `-e`: Autodetect based on locale
 
 📖 [Full Documentation](skills/git-commit/SKILL.md)
 
