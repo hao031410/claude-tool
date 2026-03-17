@@ -1,7 +1,7 @@
 ---
 name: terp-developer
 description: Use when working with Trantor2 framework models (creating/updating PO/DTO classes from JSON field definitions, converting PO to JSON), initializing projects with -init, answering architecture questions about layer responsibilities and conventions, or fixing code that violates project standards (collection null checks, repository patterns, dependency injection patterns).
-argument-hint: [-init] [model-name]
+argument-hint: "[-init] [model-name]"
 ---
 
 # terp-developer
