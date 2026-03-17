@@ -1,8 +1,10 @@
 ---
-name: git-commit
-description: 创建 git 提交，遵循 Conventional Commits 规范，支持 emoji、自动拆分、预览模式和自动推送
-argument-hint: [-p|--push] [-s|--single] [-d|--dry-run] [-e|--english]
-allowed-tools: ["Bash", "AskUserQuestion"]
+name: "git-commit"
+description: "创建 git 提交，遵循 Conventional Commits 规范，支持 emoji、自动拆分、预览模式和自动推送"
+argument-hint: "[-p|--push] [-s|--single] [-d|--dry-run] [-e|--english]"
+allowed-tools:
+  - "Bash"
+  - "AskUserQuestion"
 ---
 
 # Git Commit
