@@ -16,7 +16,6 @@ claude-tool/
 ├── prompts/               # 提示词模板
 └── skills/                # 技能模块
     ├── sql-generator/     # SQL 生成工具
-    ├── terp-model-generator/  # TERP 模型代码生成
     ├── tutor/             # 数学教学视频制作 (Manim)
     ├── dlna/              # DLNA 媒体控制
     └── terminus-emp-skill/  # EMP 工时填报
@@ -27,7 +26,6 @@ claude-tool/
 | Skill | 功能 | 入口 |
 |-------|------|------|
 | `sql-generator` | 根据业务描述生成 SQL，先验证表名/字段名/枚举值 | SKILL.md |
-| `terp-model-generator` | 根据字段定义生成 TERP 模型代码 (PO/DTO/Repo/Converter) | SKILL.md |
 | `dlna` | 发现 DLNA 设备并控制媒体播放（电视/音响） | SKILL.md, README.md |
 | `tutor` | 数学题讲解，生成 HTML 讲义与 Manim 动画视频 | SKILL.md, README.md |
 | `terminus-emp-skill` | EMP 工时填报：鉴权、项目校验、按比例写入、统计 | SKILL.md, references/spec.md |
@@ -76,23 +74,6 @@ uv pip install -r requirements.txt
 - `commands/skill-check.md` - 评估所有 skill 并推荐合适的技能
 
 ## 架构模式
-
-### terp-model-generator
-
-遵循 DDD 分层架构：
-
-```
-{project}-spi/
-├── model/{module}/
-│   ├── po/        # Persistent Object (MyBatis Plus)
-│   ├── dto/       # Data Transfer Object
-│   └── req/       # Request Object
-├── dict/{module}/ # 枚举字典接口
-└── convert/       # MapStruct Converter
-
-{project}-infrastructure/
-└── repo/{module}/ # Repository 接口
-```
 
 ### sql-generator
 

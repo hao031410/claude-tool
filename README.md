@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Plugin](https://img.shields.io/badge/plugin-marketplace-green.svg)](https://github.com/hao031410/claude-tool)
-[![Skills](https://img.shields.io/badge/skills-9-blue.svg)](skills/)
+[![Skills](https://img.shields.io/badge/skills-8-blue.svg)](skills/)
 
 **面向特定场景的 Claude Code 技能模块库，提供开箱即用的开发工具链。**
 
@@ -29,10 +29,9 @@ skill-check
 
 预期输出：
 ```
-✅ 发现 9 个技能：
+✅ 发现 8 个技能：
   - git-commit        智能 Git 提交助手
   - sql-generator     SQL 查询生成器
-  - terp-model-generator  模型代码生成
   - ...
 ```
 
@@ -84,7 +83,6 @@ skill sql-generator 查找所有没有订单的用户
 | Skill | Description | When to Use |
 |-------|-------------|-------------|
 | `sql-generator` | Generate executable SQL with table/field/enum validation | Writing database queries |
-| `terp-model-generator` | Generate TERP model code (PO/DTO/Repo/Converter) from field definitions | Creating entity models |
 | `terp-developer` | Trantor2 framework development assistant: model transformation, impact analysis, architecture guidance | Working with Trantor2 framework |
 | `terminus-emp-skill` | EMP timesheet automation: auth, project validation, proportional entry, statistics | Filling timesheets |
 
@@ -116,33 +114,6 @@ skill sql-generator 查找所有没有订单的用户
 - `count-aggregation` - Group aggregation statistics
 
 📖 [Full Documentation](skills/sql-generator/SKILL.md)
-
----
-
-### terp-model-generator
-
-**Generated Files:**
-- **PO** - Persistent Object (MyBatis Plus entity)
-- **DTO** - Data Transfer Object
-- **Dict** - Enum dictionary interface (for ENUM fields)
-- **Repo** - Repository interface
-- **Converter** - MapStruct converter
-
-**DDD Layer Architecture:**
-```
-{project}-spi/
-├── model/{module}/
-│   ├── po/        # Persistent Object
-│   ├── dto/       # Data Transfer Object
-│   └── req/       # Request Object
-├── dict/{module}/ # Enum dictionary interfaces
-└── convert/       # MapStruct Converters
-
-{project}-infrastructure/
-└── repo/{module}/ # Repository interfaces
-```
-
-📖 [Full Documentation](skills/terp-model-generator/SKILL.md)
 
 ---
 
@@ -326,7 +297,6 @@ claude-tool/
 ├── prompts/               # Prompt templates
 ├── skills/                # Skill modules
 │   ├── sql-generator/     # SQL generation tool
-│   ├── terp-model-generator/  # TERP model code generation
 │   ├── terp-developer/    # Trantor2 development assistant
 │   ├── tutor/             # Math tutorial video creation (Manim)
 │   ├── dlna/              # DLNA media control
