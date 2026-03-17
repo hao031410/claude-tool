@@ -100,6 +100,29 @@
    - 添加新的 usageFields（如果字段未记录）
    - useCount 递增
    - lastUsed 更新为当天日期
+
+## relationMeta 补全引导 ⚠️
+
+当识别到 `OBJECT` 类型但缺乏明确 `relationMeta` 时，必须按照以下优先级进行补全：
+
+1. **精准匹配**：
+   - 检查同一项目中其他 PO 是否已关联该模型。
+   - 参考 `dependency-knowledge.json` 中的 `usageFields`。
+
+2. **基于命名的预测**：
+   - `after_sale_id` -> `GEN_MD$after_sale_md`
+   - `trade_order_id` -> `GEN_MD$trade_order_md`
+   - `sku_id` -> `GEN_MD$sku_md`
+
+3. **默认关联字段**：
+   - `relationFieldKey`：默认设为 `id`。
+   - `displayFieldKey`：优先搜索 `code` 或 `name` 结尾的字段，无则设为 `id`。
+
+4. **输出确认**：
+   - 在生成 JSON 时，对于预测生成的 `relationMeta`，必须附加 `// ⚠️ 请确认关联模型别名是否正确` 的注释。
+
+---
+
 4. Write 更新后的 dependency-knowledge.json
 5. 向用户确认记录完成
 

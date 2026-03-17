@@ -160,8 +160,10 @@ digraph routing {
 
 1. 查找 PO 文件（Glob）
 2. 解析注解（@TableName, @TableField, @ApiModelProperty）
-3. 字段类型映射（详见 references/field-mapping.md）
-4. 生成标准 JSON 格式
+3. **字段类型映射与语义嗅探**（详见 references/field-mapping.md）
+   - **⚠️ 强制规则**：识别 `Id` 结尾字段，自动映射为 `OBJECT` 类型并补全 `relationMeta`。
+4. **生成标准 JSON 格式**
+   - **⚠️ 强制规则**：JSON 的 `key` 必须使用**下划线命名法**（物理字段名），严禁使用驼峰命名法。
 5. 输出到控制台或文件（doc/models/{EntityName}_fields.json）
 
 **⚠️ 强制步骤：知识库更新**
@@ -374,6 +376,8 @@ digraph routing {
 - 简单追加 CLAUDE.md 而不融合内容
 - 不检查跨模块依赖就修改模型
 - **⚠️ 导出/修改模型后不更新知识库（dependency-knowledge.json）**
-- **⚠️ 只记录部分外部模型，遗漏relationMeta关联**
+- **⚠️ 只记录部分外部模型，遗漏 relationMeta 关联**
+- **⚠️ JSON 输出使用驼峰命名 Key（必须使用下划线）**
+- **⚠️ 将关联 ID 简单识别为 NUMBER 类型（必须识别为 OBJECT）**
 
 **以上行为意味着：停止执行，重新按照完整流程开始。**
