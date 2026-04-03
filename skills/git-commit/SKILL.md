@@ -11,6 +11,12 @@ allowed-tools:
 
 智能提交创建，遵循 Conventional Commits 规范，支持 emoji、自动拆分、预览模式和自动推送。
 
+## Implementation
+
+**智能文件分析与自动 add**
+
+执行时自动分析未 add 文件的关联性，自动 `git add` 相关文件，然后走原 workflow。
+
 ## When to Use
 
 - 从修改或已暂存的文件创建提交
@@ -27,6 +33,66 @@ allowed-tools:
 | `-s` | `--single` | 强制单个提交，不自动拆分 |
 | `-d` | `--dry-run` | 仅显示提交计划，不执行 |
 | `-e` | `--english` | 使用英文提交消息 (默认：中文) |
+
+## Smart File Analysis (NEW)
+
+**自动分析未 add 文件并智能分组**
+
+### 分析规则
+
+1. **同目录文件**：自动关联
+   - `src/auth/login.ts` + `src/auth/validator.ts` → 自动分组
+
+2. **配置+代码**：自动关联
+   - `config.yaml` + `src/config.ts` → 自动分组
+   - `task-123.config.json` + `task-123.py` → 自动分组
+
+3. **测试+源码**：自动关联
+   - `user.test.ts` + `src/user.ts` → 自动分组
+
+4. **OpenSpec 模式**：自动关联
+   - `openspec/task-123.md` + `task-123.py` → 自动分组
+   - `openspec/task-123.md` + `task-123.config.json` → 自动分组
+
+5. **文件名关键词匹配**：自动关联
+   - `task-123.md` + `task-123.py` → 自动分组
+
+### 执行流程
+
+```
+1. git status 获取所有文件（包括未 add）
+2. 分析未 add 文件的关联性
+3. 自动 git add 相关文件
+4. 走原 workflow：
+   - 按逻辑分组
+   - 生成提交消息
+   - 检查特殊情况
+   - 执行提交
+```
+
+### 用户确认策略
+
+**-p 模式**：
+- 自动 add 所有相关文件
+- 直接提交，不确认
+
+**非 -p 模式**：
+- 自动 add 相关文件
+- 内容适合一个 commit → 直接提交
+- 内容不适合一个 commit → 提醒用户确认
+
+**确认提示示例**：
+```
+⚠️ 检测到多个独立变更：
+
+[1/2] ✨ feat(auth): 添加登录验证
+    文件：src/auth/login.ts, src/auth/validator.ts
+
+[2/2] 📝 docs: 更新 readme
+    文件：README.md
+
+确认拆分为 2 个提交？(y/n)
+```
 
 ## Confirmation Policy
 
@@ -48,14 +114,22 @@ Confirmation required only for special cases:
 ## Workflow
 
 ```
-1. 执行 git status 获取修改文件
-2. 按逻辑分析和分组文件 (--single 合并所有)
-3. 为每个分组生成提交消息 (带 emoji)
-4. -d 模式？显示计划并退出
-5. 检查是否有特殊情况需要确认
-6. 无特殊情况？执行 git add <files> && git commit
-7. -p 模式？执行 git push
-8. 输出提交结果
+1. 执行 git status 获取所有文件（包括未 add）
+2. 分析未 add 文件的关联性（NEW）
+   - 同目录 → 自动关联
+   - 配置+代码 → 自动关联
+   - 测试+源码 → 自动关联
+   - 文件名匹配 → 自动关联
+   - OpenSpec 模式 → 自动关联
+3. 自动 git add 相关文件（NEW）
+4. 按逻辑分析和分组文件 (--single 合并所有)
+5. 为每个分组生成提交消息 (带 emoji)
+6. -d 模式？显示计划并退出
+7. 检查是否有特殊情况需要确认
+8. 非 -p 模式 & 多个独立变更？提醒用户确认（NEW）
+9. 无特殊情况？执行 git commit
+10. -p 模式？执行 git push
+11. 输出提交结果
 ```
 
 **语言：** 默认中文，`-e` 参数使用英文
@@ -299,10 +373,32 @@ skill git-commit -p   # 执行并提交
 ```
 ⚠️ 发现未跟踪文件：
   - new-feature.ts
+  - openspec/task-123.md
+  - openspec/config.json
 
-仅跟踪已修改/已暂存文件。
-运行 git add 以包含新文件。
+📝 智能分析文件关联性：
+  - new-feature.ts: 与 openspec/task-123.md 相关（功能实现）
+  - openspec/task-123.md: 与 openspec/config.json 相关（任务配置）
+  - openspec/config.json: 独立配置文件
+
+✨ 建议：自动将相关文件加入提交
+🔥 建议：config.json 无明显关联，询问是否包含
+
+确认提交？(y/n)
 ```
+
+### Smart File Grouping (NEW)
+当检测到未跟踪文件时，自动分析文件关联性：
+1. **同目录文件**：自动分组
+2. **配置+代码**：自动分组（如 `config.yaml` + `src/config.ts`）
+3. **测试+源码**：自动分组（如 `user.test.ts` + `src/user.ts`）
+4. **文件名关键词匹配**：自动分组（如 `task-123.md` + `task-123.py`）
+5. **无关联文件**：提醒用户确认是否包含
+
+**-p 模式特殊处理**：
+- 自动分析所有未跟踪文件的关联性
+- 自动添加相关文件到暂存区
+- 对无关联文件显示警告但不阻止提交
 
 ## Common Mistakes
 
