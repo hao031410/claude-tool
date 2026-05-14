@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""ASR 命令行入口
+
+音频文件语音识别，输出字幕文件。
+"""
+
+import argparse
+import logging
+import sys
+import os
+
+# 添加项目根目录到 Python 路径
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir)
+sys.path.insert(0, root_dir)
+
+from src.core import load_config, ASRCore
+
+
+def setup_logging(verbose: bool = False):
+    """设置日志"""
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
+
+def main():
+    """主函数"""
+    parser = argparse.ArgumentParser(
+        description="ASR - 语音识别转字幕"
+    )
+    parser.add_argument(
+        "audio_path",
+        help="音频文件路径 (支持: wav, mp3, m4a, flac, ogg)",
+    )
+    parser.add_argument(
+        "--format", "-f",
+        choices=["srt", "vtt", "json"],
+        help=f"输出格式 (默认: 从配置读取，一般是 srt)",
+    )
+    parser.add_argument(
+        "--language", "-l",
+        choices=["zh", "en", "auto"],
+        help="识别语言 (默认: zh)",
+    )
+    parser.add_argument(
+        "--segment-duration", "-d",
+        type=int,
+        help="分段时长（秒）(默认: 10)",
+    )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="显示详细日志",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        setup_logging(args.verbose)
+        config = load_config()
+        asr = ASRCore(config)
+        output_path = asr.transcribe(
+            args.audio_path,
+            output_format=args.format,
+            language=args.language,
+            segment_duration=args.segment_duration,
+        )
+        print(f"✓ Transcription complete")
+        print(f"  Input: {args.audio_path}")
+        print(f"  Output: {output_path}")
+    except Exception as e:
+        print(f"✗ Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
