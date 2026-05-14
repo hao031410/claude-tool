@@ -25,3 +25,10 @@ __pycache__/
 
 # Skill temp data
 skills/terminus-emp-skill/temp/
+
+# Environment files (secrets)
+.env*
+!.env.example
+
+# Test data
+test/
